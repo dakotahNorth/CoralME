@@ -22,17 +22,25 @@ import com.coralblocks.coralme.util.CharEnum;
 import com.coralblocks.coralme.util.CharMap;
 import com.coralblocks.coralme.util.DoubleUtils;
 import com.coralblocks.coralme.util.StringUtils;
+import com.coralblocks.coralme.util.TimeInForce;
+import com.coralblocks.coralme.util.RejectReason;
+import com.coralblocks.coralme.util.CancelRejectReason;
+import com.coralblocks.coralme.util.CancelReason;
+import com.coralblocks.coralme.util.ReduceRejectReason;
+import com.coralblocks.coralme.util.Type;
+import com.coralblocks.coralme.util.ExecuteSide;
+import com.coralblocks.coralme.util.Side;
 
 public class Order {
 
 	final static String EMPTY_CLIENT_ORDER_ID = "NULL";
-	
+
 	public final static int CLIENT_ORDER_ID_MAX_LENGTH = 64;
-	
+
     private final List<OrderListener> listeners = new ArrayList<OrderListener>(64);
-    
+
     private Side side;
-    
+
     private long originalSize;
     
     private long totalSize;
