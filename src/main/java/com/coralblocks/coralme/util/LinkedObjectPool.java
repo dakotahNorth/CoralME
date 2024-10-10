@@ -41,7 +41,7 @@ public class LinkedObjectPool<E> implements ObjectPool<E> {
 			@Override
 			public E newInstance() {
 				try {
-					return klass.newInstance();
+					return klass.getDeclaredConstructor().newInstance();
 				} catch (Exception e) {
 					throw new RuntimeException(e);
 				}
