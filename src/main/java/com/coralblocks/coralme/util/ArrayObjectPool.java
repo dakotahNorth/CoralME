@@ -2,6 +2,8 @@ package com.coralblocks.coralme.util;
 
 import java.util.function.Supplier;
 
+import java.util.function.Supplier;
+
 /**
  * An object pool backed by a preallocated array to minimize latency. Instances are created upfront
  * but can also be created on demand if the pool is empty.
@@ -71,7 +73,6 @@ public final class ArrayObjectPool<E> implements ObjectPool<E> {
     private int index;
     private final LinkedObjectPool<E> backupPool;
     private final MemoryMonitor memoryMonitor;
-    private final long memoryThreshold;
 
     public ArrayObjectPool(int size, Supplier<? extends E> supplier) {
         this(size, size, supplier);
@@ -96,11 +97,8 @@ public final class ArrayObjectPool<E> implements ObjectPool<E> {
         // Initialize backupPool with preallocated instances to avoid runtime allocation
         backupPool = new LinkedObjectPool<>(backupPoolSize, supplier);
 
-        // Initialize MemoryMonitor
-        memoryMonitor = new MemoryMonitor();
-
-        // Set memory threshold to 10% of max heap memory
-        memoryThreshold = Runtime.getRuntime().maxMemory() / 10;
+        // Initialize MemoryMonitor with 10% threshold
+        memoryMonitor = new MemoryMonitor(0.1);
     }
 
     /**
@@ -130,13 +128,10 @@ public final class ArrayObjectPool<E> implements ObjectPool<E> {
         }
         if (index < pool.length - 1) {
             pool[++index] = e;
-        } else {
-            long availableMemory = memoryMonitor.getAvailableMemory();
-            if (availableMemory > memoryThreshold) {
-                backupPool.release(e);
-            }
-            // If there's not enough memory, the object is discarded and left for GC
+        } else if (!memoryMonitor.isMemoryExhausted()) {
+            backupPool.release(e);
         }
+        // If there's not enough memory, the object is discarded and left for GC
     }
 
     /**
@@ -147,6 +142,12 @@ public final class ArrayObjectPool<E> implements ObjectPool<E> {
     public int size() {
         return (index + 1) + backupPool.size();
     }
+
+    /** Shuts down the memory monitor when the pool is no longer needed. */
+    public void shutdown() {
+        memoryMonitor.shutdown();
+    }
+}
 
     /** Shuts down the memory monitor when the pool is no longer needed. */
     public void shutdown() {

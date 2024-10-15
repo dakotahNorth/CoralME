@@ -10,11 +10,14 @@ public class MemoryMonitor {
     private final MemoryMXBean memoryMXBean;
     private final Thread monitorThread;
     private volatile boolean running;
+    private final long memoryThreshold;
 
-    public MemoryMonitor() {
+    public MemoryMonitor(double memoryThresholdPercentage) {
         this.availableMemory = new AtomicLong(0);
         this.memoryMXBean = ManagementFactory.getMemoryMXBean();
         this.running = true;
+        this.memoryThreshold =
+                (long) (Runtime.getRuntime().maxMemory() * memoryThresholdPercentage);
 
         this.monitorThread = new Thread(this::monitorMemory);
         this.monitorThread.setDaemon(true);
@@ -37,6 +40,10 @@ public class MemoryMonitor {
 
     public long getAvailableMemory() {
         return availableMemory.get();
+    }
+
+    public boolean isMemoryExhausted() {
+        return availableMemory.get() <= memoryThreshold;
     }
 
     public void shutdown() {
