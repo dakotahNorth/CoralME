@@ -124,16 +124,61 @@ public class LinkedObjectPoolTest {
 	
 	@Test
 	public void testLIFOForGoodCaching() {
-		
+
 		LinkedObjectPool<StringBuilder> pool = new LinkedObjectPool<StringBuilder>(2, StringBuilder::new);
-		
+
 		Assert.assertEquals(2, pool.size());
-		
+
 		StringBuilder sb1 = pool.get();
 		pool.release(sb1);
-		
+
 		StringBuilder sb2 = pool.get();
-		Assert.assertTrue(sb1 == sb2); 
+		Assert.assertTrue(sb1 == sb2);
+
+@Test
+public void testAdaptiveMemoryManagement() throws InterruptedException {
+    // Create a pool with a small initial size
+    LinkedObjectPool<byte[]> pool = new LinkedObjectPool<>(2, () -> new byte[1024 * 1024]); // 1MB objects
+
+    // Fill up most of the available memory
+    int initialSize = pool.size();
+    List<byte[]> allocatedMemory = new ArrayList<>();
+    while (Runtime.getRuntime().freeMemory() > Runtime.getRuntime().maxMemory() * 0.2) { // Leave 20% free
+        allocatedMemory.add(new byte[1024 * 1024]); // Allocate 1MB at a time
+    }
+
+    // Try to release more objects to the pool
+    for (int i = 0; i < 100; i++) {
+        pool.release(new byte[1024 * 1024]);
+    }
+
+    // Wait for the memory monitor to update (it updates every second)
+    Thread.sleep(1500);
+
+    // Check that the pool size hasn't grown significantly
+    int finalSize = pool.size();
+    Assert.assertTrue("Pool size should not grow significantly under memory pressure",
+                      finalSize < initialSize + 10); // Allow for some growth, but not 100
+
+    // Clean up
+    allocatedMemory.clear();
+    System.gc(); // Suggest garbage collection to free up memory
+}
+
+@Test
+public void testPoolGrowthUnderNormalConditions() {
+    LinkedObjectPool<StringBuilder> pool = new LinkedObjectPool<>(2, StringBuilder::new);
+
+    int initialSize = pool.size();
+
+    // Release more objects than the initial size
+    for (int i = 0; i < 10; i++) {
+        pool.release(new StringBuilder());
+    }
+
+    int finalSize = pool.size();
+    Assert.assertTrue("Pool should grow under normal memory conditions", finalSize > initialSize);
+}
 	}
 	
 	
