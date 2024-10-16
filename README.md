@@ -4,7 +4,15 @@ A simple, fast and garbage-free matching engine order book that you can use as a
 ## What is it?
 CoralME is an order book data-structure that matches orders based on price-time priority. It maintains limit orders resting in an order book until they are either canceled or filled. Whenever an order changes its state, a callback is issued to registered listeners.
 
-...
+## What people usually mean by the term _Matching Engine_?
+Usually when people talk about a _Matching Engine_, what they are really referring to is the full solution for an electronic exchange. That would include gateways, drop copies, market data, balances, reports, monitors, margins, compliance, fees, etc. Plus the _messaging middleware_ to tie all these pieces together. In that context, **the matching engine is really just one of the many parts of an electronic exchange**. It is an important part, the central nervous systems of an exchange, which maintains orders resting inside order books, and match them when liquidity takers meet liquidity providers (i.e. market makers).
+
+For a detailed discussion of how a **first-class electronic exchange** can be built from the ground up using the sequencer architecture you should refer to [this article](https://www.coralblocks.com/index.php/building-a-first-class-exchange-architecture-with-coralsequencer/).
+
+## Quick Start
+Refer to [Example.java](https://github.com/coralblocks/CoralME/blob/main/src/main/java/com/coralblocks/coralme/example/Example.java) for a bunch of order matching use-cases.
+
+The [OrderBookTest.java](https://github.com/coralblocks/CoralME/blob/main/src/test/java/com/coralblocks/coralme/OrderBookTest.java) might give you some good ideas as well but I find the [Example.java](https://github.com/coralblocks/CoralME/blob/main/src/main/java/com/coralblocks/coralme/example/Example.java) easier to follow.
 
 ## Features
 - Fast
@@ -19,22 +27,6 @@ CoralME is an order book data-structure that matches orders based on price-time 
 - ClientID, ClientOrderID and OrderID
 - ExecutionID and ExecutionMatchID
 - Can optionally check and disallow trade to self
-
-## Project Structure
-The project now has a more organized structure with separate files for each enum:
-- `src/main/java/com/coralblocks/coralme/`
-  - `Order.java`
-  - `OrderBook.java`
-  - `TimeInForce.java`
-  - `RejectReason.java`
-  - `CancelRejectReason.java`
-  - `CancelReason.java`
-  - `ReduceRejectReason.java`
-  - `Type.java`
-  - `ExecuteSide.java`
-  - `Side.java`
-
-...
 
 ## How can I check that it is zero garbage?
 Check [NoGCTest.java](https://github.com/coralblocks/CoralME/blob/main/src/main/java/com/coralblocks/coralme/example/NoGCTest.java) to see that it creates a book and populates this book with 10 orders _one million times_. And on each of these one million times it does a bunch of executions, rejects, cancelations, reduces, etc. Run this test with `-verbose:gc -Xms128m -Xmx256m` and you will always see **zero GC activity**. _No matter how many iterations you perform, the gc activity is always zero_. If you want to see some GC activity, you can turn on a flag that forces the creation of garbage by [producing some strings](https://github.com/coralblocks/CoralME/blob/bb9461313537987db43339e429b7314e58bbb784/src/main/java/com/coralblocks/coralme/example/NoGCTest.java#L103) in the middle of the loop.
