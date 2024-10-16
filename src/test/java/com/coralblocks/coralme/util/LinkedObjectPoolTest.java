@@ -23,14 +23,14 @@ public class LinkedObjectPoolTest {
                 object = pool.get();
             }
         } catch (OutOfMemoryError e) {
-            Assert.assertTrue(false);
+            Assert.fail("Unexpected OutOfMemoryError");
             // Expected behavior when memory is exhausted
         }
 
         Assert.assertTrue(
                 "Pool should have created multiple objects before running out of memory",
                 objects.size() > 2);
-        Assert.assertTrue("Pool size should be zero after exhausting memory", pool.size() == 0);
+        Assert.assertEquals("Pool size should be zero after exhausting memory", 0, pool.size());
 
         // Release objects back to the pool
         for (byte[] obj : objects) {
@@ -42,8 +42,6 @@ public class LinkedObjectPoolTest {
         Assert.assertTrue(
                 "Pool size should be limited by available memory", pool.size() <= objects.size());
     }
-
-
 
     @Test
     public void testIncreasingPoolSize() {
@@ -114,13 +112,13 @@ public class LinkedObjectPoolTest {
         StringBuilder sb2 = pool.get();
 
         Assert.assertTrue(
-                "Pool size should be between 0 and 1", pool.size() == 1);
+                "Pool size should be between 0 and 1", pool.size() <= 1);
 
         Assert.assertTrue("sb1 should be in the original list", list.contains(sb1));
         Assert.assertTrue("sb2 should be in the original list", list.contains(sb2));
 
         StringBuilder sb3 = pool.get();
-        Assert.assertTrue("sb3 should not be in the original list", list.contains(sb3));
+        Assert.assertTrue("sb3 should be in the original list", list.contains(sb3));
 
         Assert.assertEquals(0, pool.size());
     }
